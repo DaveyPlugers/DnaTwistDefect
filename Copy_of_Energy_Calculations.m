@@ -27,9 +27,9 @@ Defect_Location = 41; %Used in Type1,2 and 3 but make a splitting into the diffe
 Twist_Defect_Type3 = false; %5/5 split into 5/1/5
 
 Defect_Nucleosome_Location = 6; %This will be used now, it moves the base pairs between the nucleosomes
-Twist_Defect_Type4 = false; %Takes the 9 bp's in between and undertwists them into 10
+Twist_Defect_Type4 = true; %Takes the 9 bp's in between and undertwists them into 10
 Twist_Defect_Type5 = false; %Takes the 9 bp's and overtwists them into 8
-Twist_Defect_Type6 = true; %Takes the 19 bp's in between and undertwists them into 20
+Twist_Defect_Type6 = false; %Takes the 19 bp's in between and undertwists them into 20
 Go_Over_All_Locations = false; %This ignores Defect_Nucleosome_Location and instead goes over all locations
 Go_Over_Multiple_String = false %This turns off some plots and instead we loop to average values
 
