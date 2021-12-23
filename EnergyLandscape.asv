@@ -42,7 +42,7 @@ Geometric_Properties(:,:,7) = Raise_Array;
 Geometric_Properties(:,:,8) = K_Raise_Array;
 
 %The Geometric_Properties array is parsed into the functions
-InternalSteps = 10;
+InternalSteps = 1;
 Internalmove = 1;
 Chromatin_Position = 5; %SHL = -7 + Chromatin_Position so now it's at -2, double check this later though
 N = 147;
@@ -79,13 +79,13 @@ for w=1:InternalSteps
         Peak_Defect_Energies(14) = 12;
         for l=1:12 %K20 loop
             [Defected_DNA_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,l,2);
-            Temporary_Code = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
-            Defected_Energy(2*l,:) = sum(Temporary_Code);
+            Defected_Energy(2*l,:) = sum(EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true));
+
             %Note we only add the unbinding kost for the cross probability
             %calculation we do here, not when we calculate the average, this is
             %later after the for loop
             Peak_Defect_Energies(l+1) = sum(Defected_Energy(2*l,:)) + Amino_Unbinding_Cost(2*l) - sum(sum(Undefected_Energy));
-            Chromatin_Energy_Landscape(w,2*l) = Chromatin_Energy_Landscape(w,2*l) + (sum(sum(Temporary_Code(1:6+10*(14-Chromatin_Position),:)- Undefected_Energy(1:6+10*(14-Chromatin_Position),:))))/Total_DNA_String;
+            Chromatin_Energy_Landscape(w,2*(k-1)+1) = Chromatin_Energy_Landscape(w,2*(k-1)+1) + (sum(sum(Temporary_Code(1:6+10*(14-Chromatin_Position),:)- Undefected_Energy(1:6+10*(14-Chromatin_Position),:))))/Total_DNA_String;
 
         end
 
@@ -102,7 +102,7 @@ for w=1:InternalSteps
     
     %Adding unbinding cost to average
     Average_Defect_Energy_With_Cost = Average_Defect_Energy + Amino_Unbinding_Cost;
-    Chromatin_Energy_Landscape(w,1:2*(14-Chromatin_Position)) = Chromatin_Energy_Landscape(w,1:2*(14-Chromatin_Position)) + Amino_Unbinding_Cost(1:2*(14-Chromatin_Position));
+
 
     %This part also calculates crossing probabilities if we average the defect
     %energies
