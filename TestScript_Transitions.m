@@ -14,36 +14,41 @@
 
 
 %Can uncomment some of these if I use basic version
-Energy_Landscape = Chromatin_Energy_Landscape(:,1:18);
+n = 9;
+Energy_Landscape = fliplr(Chromatin_Energy_Landscape(:,1:2*n-1));
+
+%Use a filler landscape for now
 %Energy_Landscape = [repmat([2,5],1,n)];
 %Defect_Array = [0,0,0,0,0,0,0,0,0,0];
-%Use a filler landscape for now
-n=length(Energy_Landscape(1,:))/2;
-Defect_Array = [repmat([0],n)];
+
+
+Defect_Array = zeros(1,n);
 
 
 Time = 0;
-IntroductionRate = 0.1; %Small value so it doesn't happen often
+IntroductionRate = 0.01; %Small value so it doesn't happen often
 
-Iterations = 1;
+Iterations = 100000;
 Introduction_Time = [];
 Leave_Time = [];
-
+k = 1;
 for q=1:Iterations
     [Left_Movement,Right_Movement,Introduction_Possible] = LeftRightMovement(Defect_Array);
 
     TransitionRate = Introduction_Possible*IntroductionRate;
     for y=1:n
         if y==1
-            Right_Movement(y) = Right_Movement(y)*(Energy_Landscape(2*y) - Energy_Landscape(2*y-1));
+            Right_Movement(y) = Right_Movement(y)*(Energy_Landscape(k,2*y) - Energy_Landscape(k,2*y-1));
             TransitionRate = TransitionRate + Right_Movement(y);
         elseif y==n
-            Left_Movement(y) = Left_Movement(y)*(Energy_Landscape(2*(y-1)) - Energy_Landscape(2*(y-1)+1));
+            l = mod(k - sum(Defect_Array(1:n-1)- 1),10) + 1;
+            Left_Movement(y) = Left_Movement(y)*(Energy_Landscape(l,2*(y-1)) - Energy_Landscape(l,2*(y-1)+1));
             Right_Movement(y) = Defect_Array(y)*(3); %Note this is the leaving one, change later
             TransitionRate = TransitionRate + Left_Movement(y) + Right_Movement(y);
         else
-            Left_Movement(y) = Left_Movement(y)*(Energy_Landscape(2*(y-1)) - Energy_Landscape(2*(y-1)+1));
-            Right_Movement(y) = Right_Movement(y)*(Energy_Landscape(2*y) - Energy_Landscape(2*y-1));
+            l = mod(k - sum(Defect_Array(1:n-1)- 1),10) + 1;
+            Left_Movement(y) = Left_Movement(y)*(Energy_Landscape(l,2*(y-1)) - Energy_Landscape(l,2*(y-1)+1));
+            Right_Movement(y) = Right_Movement(y)*(Energy_Landscape(l,2*y) - Energy_Landscape(l,2*y-1));
             TransitionRate = TransitionRate + Right_Movement(y) + Left_Movement(y);
         end
     end   
@@ -60,6 +65,7 @@ for q=1:Iterations
     if TransitieCoefficient < Introduction_Possible*IntroductionRate
         Defect_Array(1) = Defect_Array(1) + 1; %Here we introduce a twist, doing like this just to test if it works, replace with =1 later
         Introduction_Time = [Introduction_Time,Time];
+        k = mod(k,10) +1;
     else
         TransitieCoefficient = TransitieCoefficient - Introduction_Possible*IntroductionRate;
         GillespieLoop = true;
@@ -95,3 +101,23 @@ Introduction_Time;
 Leave_Time;
 Defect_Array
 
+
+
+
+
+
+%Here statistical analysis of the time values
+
+TenSteps = floor(length(Leave_Time)/10);
+
+Average_Lifetime = zeros(1,10);
+
+for i=1:TenSteps
+    for j=1:10
+        z = 10*(i-1) + j
+        Average_Lifetime(j) = Average_Lifetime(j) + (Leave_Time(z) - Introduction_Time(z))/TenSteps;
+    
+    end
+end
+
+plot(Average_Lifetime)
