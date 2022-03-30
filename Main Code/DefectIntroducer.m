@@ -5,7 +5,7 @@ function [Defected_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,Defect_Location
 %   Defect_Location = Between which BP's will we add this defect (1 => 6-16
 %   for K10, 1 => 6-26 for K20 then +10*n for location 1 + n)
 %   Defect_type = What type of defect are we adding (1 => K10 undertwist,
-%   2=> K20 undertwist) Overtwist not added in this function yet.
+%   2=> K20 undertwist) 
 %   Output:
 %   Defected_Geom = The geometry with the defect integrated into it
 %   AminoBP = Array saving all the positions of binding sites
