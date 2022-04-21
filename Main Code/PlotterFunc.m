@@ -1,12 +1,12 @@
-function [outputArg1,outputArg2] = PlotterFunc(Geometry,ColourType,AminoBP)
+function [outputArg1,outputArg2] = PlotterFunc(inputArg12,ColourType,AminoBP)
 %PLOTTERFUNC Summary of this function goes here
 %   Detailed explanation goes here
 if ColourType == 1
     Colour = [0,1,0];
 elseif ColourType == 2
-    Colour = [1,0,0];
+    Colour = [1,0,0]
 end
-Geometric_Values=Geometry;
+Geometric_Values=inputArg12
 AminoBP = AminoBP-1; %Because we have an extra begin rectangle so we plot 1 more technically
 
 Length = length(Geometric_Values(:,1));

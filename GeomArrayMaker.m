@@ -16,7 +16,7 @@ function [GeometricArray,DNAIndexation] = GeomArrayMaker(DNAString,Mode,Geometri
 Gamma = 4.46;
 Theta_Twist = 35.575;
 Raise = 3.4; %Angstrom
-Phase_Shift = 0;
+Phase_Shift = -6*pi/20;
 
 
 %$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$

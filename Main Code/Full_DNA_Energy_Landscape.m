@@ -1,18 +1,26 @@
-%function [outputArg1,outputArg2] = Full_DNA_Energy_Landscape(inputArg1,inputArg2)
-%FULL_DNA_ENERGY_LANDSCAPE Summary of this function goes here
-%   Takes a DNA string as input and calculates the energy landscape for
-%   every possible position
+function [Barrier_Right,Barrier_Left,Geometric_Properties,Positives,Negatives,Full_Energy_Landscape] = Full_DNA_Energy_Landscape(DNA,Dampfactor)
+%Full_DNA_Energy_Landscape, Calculate the energies for a DNA string
+%   Input:
+%   DNA = DNA string of which we want the energy_landscape
+%   Damping = Boolean, if we want damped energy values
+%   Output:
+%   Barrier_Right = Energy difference to move to the right
+%   Barrier_Left = Energy difference to move to the left
+%   Geometric_Properties = Array of geometric properties for energy values
+%   Positives = Integer to say how often we did not have to adjust barrier
+%   Negatives = Integer to say how ofted we did have to adjust barrier
+%   Full_Energy_Landscape = The energy values used to verify we did it
+%   correct
 
-DNA = 'ACATACATTCTTTTAAATTTCGAAGACCTCGTGATTCTTCCCGCGTTTACTGGCAAAATCTTAGAAATCGCGGCAAAGTCAAAAAAATTTTACAAATTGTCGTCGGGTCCTTAGAATTCGGCAGTCGTTTCTGGGTTCACGCACGACTTCTTTGAAAGGTCAAAAGCCGCCGAGTTTTTTCGGCGTAACTCCCGATCAGACCGAAACATCTGAAAACTTTCCTGTGACTACGCAGACGTCCGGGAAGTTCAAATCGTTTCGGGAGTTATCTTGAGATTTCTTCAAAACACACCAGCGTTTTCGAAAAATCTCCGTAATCACGCAAAACACGCTACGAATCAGAAAACGAAC';
+%DNA = 'ACATACATTCTTTTAAATTTCGAAGACCTCGTGATTCTTCCCGCGTTTACTGGCAAAATCTTAGAAATCGCGGCAAAGTCAAAAAAATTTTACAAATTGTCGTCGGGTCCTTAGAATTCGGCAGTCGTTTCTGGGTTCACGCACGACTTCTTTGAAAGGTCAAAAGCCGCCGAGTTTTTTCGGCGTAACTCCCGATCAGACCGAAACATCTGAAAACTTTCCTGTGACTACGCAGACGTCCGGGAAGTTCAAATCGTTTCGGGAGTTATCTTGAGATTTCTTCAAAACACACCAGCGTTTTCGAAAAATCTCCGTAATCACGCAAAACACGCTACGAATCAGAAAACGAAC';
+%Dampfactor = 1;
 M = length(DNA);
 DNA_Extended = [DNA DNA]; %Make longer since we want every position and we take it to be periodic
 
 N=147;
-Gamma = 4.46;
-Theta_Twist = 35.575;
-Raise = 3.4; %Angstrom
-Phase_Shift = 0;
+
 Defect_Type = 1; %1 is for overtwist, 3 is for undertwist (Defect_Type +1 is for their respective K20 versions)
+Defect_Type = Defect_Type + 4; %We add +4 since we have new version of the defects, it's sloppy but I don't remove the old one yet before I verify everything
 Negative_Barrier_Replacement = 0.1;
 %Sometimes there is no actual barrier and it seems to be negative, to
 %resolve this we replace this by a really small barrier value given here
@@ -38,19 +46,26 @@ Geometric_Properties(:,:,7) = Raise_Array;
 Geometric_Properties(:,:,8) = K_Raise_Array;
 
 Amino_Unbinding_Cost = [0,repmat([12,0],1,13)];
+Leaving_Amino_Unbinding_Cost = 12; %This is the amino at the end of the nucleosome, we can change this separately
 Full_Energy_Landscape = zeros(2*M,27); %there is redundancy in here but makes it easier to follow
 %First M is movement to the left, second M is movement to the right of the
-%defect, making it a 3d array makes matlab act stupid
+%defect, making it a 3d array makes matlab act stupid so left and right in
+%same dimension followed by each other (1:M and M+1:2M)
 
 
-for w=1:M %We go over every position, this is only 1 of the directions though (defect moving to the left)
+for w=1:M %We go over every position, this is only 1 of the directions though (defect moving to the left = nucleosome ot the right)
     
-   DNAString = DNA_Extended(w:N+w);  %WE NEED TO CHANGE SOMETHING HERE
+   DNAString = DNA_Extended(w:N+w);  
    %IT SEEMS WE START AT THE FIRST INDEX OF THE DNA, IN REALITY THE DEFECT
    %STARTS FROM INDEX 6 UP TO 146!!!!!!!!!!!!!
    %!!!!!!!!!!!!!!!
    %!!!!!!!!!!!!!!!
-   %!!!!!!!!!!!!!!!
+   %So what does this mean, VERY IMPORTANT, if we have index k it means we
+   %have the DNA running from k to k+N, if we have our defect in SHL = -2
+   %this would mean our defect is on k + 10*(SHL+7)+6 = k + 56 to k + 66
+   %In convention N=147 dna strings are used and I will use the first bp as
+   %the start index though to make it easier to follow with the rest of the
+   %code too
    
    [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);%1 is to denote the mode, see function description
    Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
@@ -62,7 +77,7 @@ for w=1:M %We go over every position, this is only 1 of the directions though (d
         
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
-        Full_Energy_Landscape(w,(2*k-1)) = sum(sum(Temporary_Code(:)-Undefected_Energy(:)));
+        Full_Energy_Landscape(w,(2*k-1)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(6+10*(k-1):6+10*(k),:)-Undefected_Energy(6+10*(k-1):6+10*(k),:)));
    end
    
    for k=1:13 %K10 loop
@@ -72,7 +87,7 @@ for w=1:M %We go over every position, this is only 1 of the directions though (d
         
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
-        Full_Energy_Landscape(w,(2*k)) = sum(sum(Temporary_Code(:)-Undefected_Energy(:)));
+        Full_Energy_Landscape(w,(2*k)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(6+10*(k-1):6+10*(k+1),:)-Undefected_Energy(6+10*(k-1):6+10*(k+1),:)));
    end
    Full_Energy_Landscape(w,:) = Full_Energy_Landscape(w,:) + Amino_Unbinding_Cost;
     
@@ -80,16 +95,13 @@ end
 
 
 
-DNA_Extended_Moved = [DNA(M) DNA_Extended]; %Here we add the amino at the end to the front as well
-%Because when it moves the other way we want to make sure we are looking at
-%the same base DNA, ReversedDefectIntroducer also used that everything has
-%already been moved by one (amino binding sites at 10*k + 7 instead of 10*k + 6)
+ 
 
 %What used to be on position 6 is now on position 7 which is what we want
 
 for w=1:M
-    DNAString = DNA_Extended_Moved(w:N+w);
-    [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,3,Geometric_Properties);%3 is to denote the mode, see function description
+    DNAString = DNA_Extended(w:N+w);
+    [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);%3 is to denote the mode, see function description
     Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
 
     
@@ -100,7 +112,7 @@ for w=1:M
         
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
-        Full_Energy_Landscape(M+w,(2*k-1)) = sum(sum(Temporary_Code(:)-Undefected_Energy(:)));
+        Full_Energy_Landscape(M+w,(2*k-1)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(5+10*(k-1):5+10*(k),:)-Undefected_Energy(5+10*(k-1):5+10*(k),:)));
    end
    
    for k=1:13 %K10 loop
@@ -110,7 +122,7 @@ for w=1:M
         
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
-        Full_Energy_Landscape(M+w,(2*k)) = sum(sum(Temporary_Code(:)-Undefected_Energy(:)));
+        Full_Energy_Landscape(M+w,(2*k)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(5+10*(k-1):5+10*(k+1),:)-Undefected_Energy(5+10*(k-1):5+10*(k+1),:)));
    end
    Full_Energy_Landscape(M+w,:) = Full_Energy_Landscape(M+w,:) + Amino_Unbinding_Cost;
     
@@ -123,8 +135,10 @@ Barrier_Right = zeros(2*M,14);
 Barrier_Left = zeros(2*M,14);
 Negatives = 0;
 Positives = 0;
-for w=1:2*M
-    
+for w=1:2*M %Here we precalculate the defects, take exponent later already
+    if w==M
+       Negatives 
+    end
     Barrier_Right(w,1) = Full_Energy_Landscape(w,2) - Full_Energy_Landscape(w,1);
     if Barrier_Right(w,1)<0
         Negatives = Negatives + 1;
@@ -163,6 +177,40 @@ for w=1:2*M
     
     
 end
+%Now we don't have the leaving energy bound yet since we don't have a K20
+%defect to leave, calculating it here and putting it in Barrier_Right(w,14)
+for w=1:M
+    DNAString = DNA_Extended(w:N+w);
+    Energy_Leave_Bound = Leaving_Bound_Energy(0,DNAString,Geometric_Properties) + Leaving_Amino_Unbinding_Cost;
+    Barrier_Right(w,14) = Energy_Leave_Bound - Full_Energy_Landscape(w,27);
+    if Barrier_Right(w,14) < 0
+       Negatives = Negatives +1; 
+       Barrier_Right(w,14) = 0.05;
+    else
+        Positives = Positives + 1;
+    end
+end
 
-%end
+
+%We mirror for the remodeller in the other direction
+Filler = flip(Barrier_Left(M+1:2*M,:),2);
+Barrier_Left(M+1:2*M,:) = flip(Barrier_Right(M+1:2*M,:),2);
+Barrier_Right(M+1:2*M,:) = Filler;
+
+
+
+for w=M+1:2*M
+    DNAString = DNA_Extended(w-M:N+w-M);
+    Energy_Leave_Bound = Leaving_Bound_Energy(1,DNAString,Geometric_Properties) + Leaving_Amino_Unbinding_Cost;
+    Barrier_Right(w,14) = Energy_Leave_Bound - Full_Energy_Landscape(w,1);
+    if Barrier_Right(w,14) < 0
+       Negatives = Negatives +1; 
+       Barrier_Right(w,14) = 0.05;
+    else
+        Positives = Positives + 1;
+    end
+end
+
+
+end
 

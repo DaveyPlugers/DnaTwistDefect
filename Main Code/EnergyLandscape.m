@@ -143,6 +143,9 @@ for w=1:InternalSteps
     %didn't sum over the full defect, we don't care though we set this as a
     %hard bound which we cannot cross
     
+    %We did analysis of opposite side we don't need it to be accurate so we
+    %neglect it from now on. Still in here for future development though
+    
     
     %This part also calculates crossing probabilities if we average the defect
     %energies
