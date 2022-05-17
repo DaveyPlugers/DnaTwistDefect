@@ -15,7 +15,7 @@
 
 %Can uncomment some of these if I use basic version
 n = 9;
-Energy_Landscape = fliplr(Full_Energy_Landscape(191:337,1:2*n-1));
+Energy_Landscape = fliplr(Full_Energy_Landscape(1:147,1:2*n-1));
 
 %Use a filler landscape for now
 %Energy_Landscape = [repmat([2,5],1,n)];
@@ -28,7 +28,7 @@ Defect_Array = zeros(1,n);
 Time = 0;
 IntroductionRate = 10^(-7); %Small value so it doesn't happen often
 
-Iterations = 1000000;
+Iterations = 10000000;
 Introduction_Time = zeros(1,floor(Iterations/n^2));
 Leave_Time = zeros(1,floor(Iterations/n^2));
 k = 10;

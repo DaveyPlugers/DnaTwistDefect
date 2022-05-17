@@ -50,12 +50,16 @@
 %Loop_Velocity = ... Change timescale on which the loops move w.r.t. twists
 %Total_Duration = ... Time we want to run our simulation for
 %Note that high timesteps will cause errors, USE EPS(x) TO CHECK!!!
+%Amount_Of_Simulations = ... (integer) how many simulations will we have,
+%can do this to compare changing variables
 
 %Parameters which we can add later if interested
 %Assymetric_Remodeller = true/false Different chance for the directions
 %Overtwist = true/false we could write the code to allow this too
 %Freeze_Out = true/false we could freeze the simulation dynamics with time
 %% Parameter initialisation
+rng(10071584) %Seed
+tic %Timing
 
 Passable_Chromatin = false;
 Variable_Introduction = false;
@@ -63,22 +67,34 @@ Duration_Twists = 10^8;
 Duration_Loops = 10^5;
 Chromatin_Barrier = 10^(-12);
 Intro_Rate = 10^(-6);
-Damp_Factor = 0.9;
+
+Damp_Factor = 0.8;
 Position_Remodeller = -2;
 Loop_Velocity = 1;
-Total_Duration = 10^(9);
-
+Total_Duration = 10^(13);
+Amount_Of_Simulations = 1;
+Sequence_Difference = [0.18];%Here we can change some parameters for the different simulations
 
 DNA = 'GGTGGGCTCCGAAAAATTCGCAGGGCGACCGGCGAAATGCTCAAAAAATCAAAAAATATTCCCTGAAACAAAAGCAACTCTTGCGAAACGGGCGCATTTTTAAAAAATTCGGAGAAAATTTTTGAAATCGTGACGCATCTCTTGCCGTTCGCCAAACAATCCAGAAATTTTATTGTTCAGGCAAAATTCACTAGGTTTTATGGTGAAACGCAAAAAATTCTGACGTTTTCATGAACGTCTTTTAGGATTTTCAGGTTAATGCGGTTGGGCTCCAAAATCTCAAGCAGTCTCGTAGAAATTTCAAAAATTTCGGCATTCTTGGAGAATCACGGGAAGATACTCGCCGGTTT'; 
 %% Calculating EnergyLandscape
 %Later write some more code here to verify validity
 
-[Barrier_Right,Barrier_Left,Geometric_Properties,Positives,Negatives,Full_Energy_Landscape] = Full_DNA_Energy_Landscape(DNA,Damp_Factor);
-
+%[Barrier_Right,Barrier_Left,Geometric_Properties,Positives,Negatives,Full_Energy_Landscape] = Full_DNA_Energy_Landscape(DNA,Damp_Factor);
+%"We had " + Negatives + " energy barrier corrections"
 
 %%
 
 %% Simulation
+
+Fractional_Duration_History = zeros(Amount_Of_Simulations,length(DNA));
+for z=1:Amount_Of_Simulations
+    
+Damp_Factor = Sequence_Difference(z);
+[Barrier_Right,Barrier_Left,Geometric_Properties,Positives,Negatives,Full_Energy_Landscape] = Full_DNA_Energy_Landscape(DNA,Damp_Factor);
+"We had " + Negatives + " energy barrier corrections"
+
+
+
 Length_DNA = length(DNA);
 Position = floor(length(DNA)*rand)+1;
 Looping = true;
@@ -90,36 +106,45 @@ Position_History= zeros(1,Size,'int16');
 Duration_History = zeros(1,Size);
 Iterations = 0;
 
+WaitingBar = waitbar(0,'Simulating DNA, please wait');
+s = clock;
+
 while Looping
-    %Direction = floor(2*rand);
-    Direction = 1;
+    Direction = floor(2*rand);
+    %Direction = 0; %If we want to try one direction %0 is to the left 1 to
+    %the right
     Duration = exprnd(Duration_Twists);
     
     
-    [Introduction_Time,Leave_Time,k,Temp_Time] = Chromatin_Transition_Function(Duration,DNA,Position_Remodeller,Position,Direction,Intro_Rate,Variable_Introduction,Passable_Chromatin,Chromatin_Barrier,Barrier_Left,Barrier_Right);
+    [Introduction_Time,Leave_Time,k,Temp_Time] = Copy_of_Chromatin_Transition_Function(Duration,DNA,Position_Remodeller,Position,Direction,Intro_Rate,Variable_Introduction,Passable_Chromatin,Chromatin_Barrier,Barrier_Left,Barrier_Right);
     
     %Saving duration it was at some location and at what time
     Position_History(Iterations+1) = Position;
-    if length(Leave_Time(1,:)) > 1
+    if length(Leave_Time(1,:)) > 0
         Duration_History(Iterations+1) = Leave_Time(1,1);
-    else
-        Duration_History(Iterations+1) = Temp_Time;
-    end
-    if length(Leave_Time(1,:)) > 1
-        for i=1:length(Leave_Time)-1
+        
+        for i=1:length(Leave_Time(1,:))-1
             Position_History(Iterations+i+1) = Leave_Time(2,i);
             Duration_History(Iterations+i+1) = Leave_Time(1,i+1) - Leave_Time(1,i);
         end
         
-    end
-    if length(Leave_Time(1,:)) > 1 
         Position_History(Iterations+length(Leave_Time(1,:))+1) = Leave_Time(2,length(Leave_Time(1,:)));
         Duration_History(Iterations+length(Leave_Time(1,:))+1) = Temp_Time - Leave_Time(1,length(Leave_Time(1,:)));
+    else
+        Duration_History(Iterations+1) = Temp_Time;
     end
+    
+  
     Position = k;
     Iterations = Iterations + length(Leave_Time(1,:))+1;
     
-    Time_Passed = Time_Passed + Duration
+    Time_Passed = Time_Passed + Duration;
+    
+    is = etime(clock,s);
+    esttime = is * Total_Duration / Time_Passed;
+    
+    WaitingBar = waitbar(Time_Passed / Total_Duration,WaitingBar,['Simulating DNA, time remaining: ', num2str(esttime/60 - is/60), ' min']);
+    
     if Time_Passed > Total_Duration
         Looping = false;
     else
@@ -130,10 +155,11 @@ while Looping
         end
     end
     
-end    
-
+end   
+close(WaitingBar)
+WaitingBar = waitbar(1,'Finishing Data Analysis');
 %%
-
+close(WaitingBar)
 
 
 Position_History = Position_History(1:find(Position_History,1,'last'));
@@ -147,4 +173,28 @@ for j=1:length(Position_History)
     end
 end
 Fractional_Duration = Fractional_Duration/Time_Passed;
-plot(Fractional_Duration)
+
+%Avoid red and green for colour blindness, red in line so no green here
+%Uncomment some of these if no package available
+%Colours = [[0  0.75 0.75]; [0 0 1]; [0.25 0.25 0.25]; [0.6350, 0.0780, 0.1840]; [0.8500, 0.3250, 0.0980]]; %Cyan, Dark blue, Grey, Bourdeaux, Orange, extra colour if needed: magenta [0.75 0 0.75]
+%Colours = summer(Amount_Of_Simulations);  %This is more a sequential way of doing it with 5 colours, should also be good for colour blind? Either uncomment this and the line below or the one above
+%Colours(5,:) = [0.75, 0.75, 0]; %Change the last yellow to a darker one
+Colours = inferno(Amount_Of_Simulations+2); %+1 since the colormap becomes too white in the end
+Lbl_text = ["1";"0.4";"0.18";"0"];
+
+txt = "Damp factor = " + Lbl_text(z);
+
+plot(Fractional_Duration,'color',Colours(z,:), 'linewidth', 1.2, 'DisplayName', txt)
+hold on
+Fractional_Duration_History(z,:) = Fractional_Duration;
+end
+
+title("Occupation distribution remodeller for different dampfactors")
+xlabel('Begin Index of 147 length DNA string')
+ylabel('Fractional probability')
+Uniform = 1/length(DNA);
+line([0 350],[Uniform Uniform],'Color','red','LineStyle','--','DisplayName','Uniform probability' )
+legend show
+grid minor
+
+toc

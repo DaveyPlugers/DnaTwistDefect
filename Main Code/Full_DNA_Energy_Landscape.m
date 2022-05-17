@@ -12,15 +12,14 @@ function [Barrier_Right,Barrier_Left,Geometric_Properties,Positives,Negatives,Fu
 %   Full_Energy_Landscape = The energy values used to verify we did it
 %   correct
 
-%DNA = 'ACATACATTCTTTTAAATTTCGAAGACCTCGTGATTCTTCCCGCGTTTACTGGCAAAATCTTAGAAATCGCGGCAAAGTCAAAAAAATTTTACAAATTGTCGTCGGGTCCTTAGAATTCGGCAGTCGTTTCTGGGTTCACGCACGACTTCTTTGAAAGGTCAAAAGCCGCCGAGTTTTTTCGGCGTAACTCCCGATCAGACCGAAACATCTGAAAACTTTCCTGTGACTACGCAGACGTCCGGGAAGTTCAAATCGTTTCGGGAGTTATCTTGAGATTTCTTCAAAACACACCAGCGTTTTCGAAAAATCTCCGTAATCACGCAAAACACGCTACGAATCAGAAAACGAAC';
-%Dampfactor = 1;
+DNA = 'GGTGGGCTCCGAAAAATTCGCAGGGCGACCGGCGAAATGCTCAAAAAATCAAAAAATATTCCCTGAAACAAAAGCAACTCTTGCGAAACGGGCGCATTTTTAAAAAATTCGGAGAAAATTTTTGAAATCGTGACGCATCTCTTGCCGTTCGCCAAACAATCCAGAAATTTTATTGTTCAGGCAAAATTCACTAGGTTTTATGGTGAAACGCAAAAAATTCTGACGTTTTCATGAACGTCTTTTAGGATTTTCAGGTTAATGCGGTTGGGCTCCAAAATCTCAAGCAGTCTCGTAGAAATTTCAAAAATTTCGGCATTCTTGGAGAATCACGGGAAGATACTCGCCGGTTT';
 M = length(DNA);
 DNA_Extended = [DNA DNA]; %Make longer since we want every position and we take it to be periodic
 
 N=147;
 
 Defect_Type = 1; %1 is for overtwist, 3 is for undertwist (Defect_Type +1 is for their respective K20 versions)
-Defect_Type = Defect_Type + 4; %We add +4 since we have new version of the defects, it's sloppy but I don't remove the old one yet before I verify everything
+Defect_Type = Defect_Type + 8; %We add +8 since we have new version of the defects, it's sloppy but I don't remove the old one yet before I verify everything
 Negative_Barrier_Replacement = 0.1;
 %Sometimes there is no actual barrier and it seems to be negative, to
 %resolve this we replace this by a really small barrier value given here
@@ -52,8 +51,9 @@ Full_Energy_Landscape = zeros(2*M,27); %there is redundancy in here but makes it
 %defect, making it a 3d array makes matlab act stupid so left and right in
 %same dimension followed by each other (1:M and M+1:2M)
 
-
-for w=1:M %We go over every position, this is only 1 of the directions though (defect moving to the left = nucleosome ot the right)
+testvalue = zeros(1,2*M);
+testdefectvalue = zeros(27,2*M);
+for w=1:M %We go over every position, this is only 1 of the directions though (defect moving to the left = nucleosome to the right)
     
    DNAString = DNA_Extended(w:N+w);  
    %IT SEEMS WE START AT THE FIRST INDEX OF THE DNA, IN REALITY THE DEFECT
@@ -69,12 +69,12 @@ for w=1:M %We go over every position, this is only 1 of the directions though (d
    
    [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);%1 is to denote the mode, see function description
    Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
-
+   testvalue(w) = sum(sum(Undefected_Energy));
    for k=1:14 %K10 loop
         [Defected_DNA_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,k,Defect_Type);
         Temporary_Code = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
         
-        
+        testdefectvalue(2*k-1,w) = sum(sum(Temporary_Code));
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
         Full_Energy_Landscape(w,(2*k-1)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(6+10*(k-1):6+10*(k),:)-Undefected_Energy(6+10*(k-1):6+10*(k),:)));
@@ -83,7 +83,7 @@ for w=1:M %We go over every position, this is only 1 of the directions though (d
    for k=1:13 %K10 loop
         [Defected_DNA_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,k,Defect_Type+1);
         Temporary_Code = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
-        
+        testdefectvalue(2*k,w) = sum(sum(Temporary_Code));
         
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
@@ -93,7 +93,7 @@ for w=1:M %We go over every position, this is only 1 of the directions though (d
     
 end
 
-
+Defect_Type = Defect_Type; %Temporary, we need to add defects to the reverseddefect function
 
  
 
@@ -103,13 +103,13 @@ for w=1:M
     DNAString = DNA_Extended(w:N+w);
     [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);%3 is to denote the mode, see function description
     Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
-
+    testvalue(M+w) = sum(sum(Undefected_Energy));
     
     for k=1:14 %K10 loop
         [Defected_DNA_Geom,AminoBP] = ReversedDefectIntroducer(DNA_Geometry,k,Defect_Type);
         Temporary_Code = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
         
-        
+        testdefectvalue(2*k-1,M + w) = sum(sum(Temporary_Code));
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
         Full_Energy_Landscape(M+w,(2*k-1)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(5+10*(k-1):5+10*(k),:)-Undefected_Energy(5+10*(k-1):5+10*(k),:)));
@@ -119,7 +119,7 @@ for w=1:M
         [Defected_DNA_Geom,AminoBP] = ReversedDefectIntroducer(DNA_Geometry,k,Defect_Type+1);
         Temporary_Code = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
         
-        
+        testdefectvalue(2*k,M+w) = sum(sum(Temporary_Code));
         %Here we only take a small part of the energy landscape which
         %we use for the later movement
         Full_Energy_Landscape(M+w,(2*k)) = Dampfactor*sum(sum(Temporary_Code(:)-Undefected_Energy(:))) + (1-Dampfactor)*sum(sum(Temporary_Code(5+10*(k-1):5+10*(k+1),:)-Undefected_Energy(5+10*(k-1):5+10*(k+1),:)));
@@ -136,9 +136,7 @@ Barrier_Left = zeros(2*M,14);
 Negatives = 0;
 Positives = 0;
 for w=1:2*M %Here we precalculate the defects, take exponent later already
-    if w==M
-       Negatives 
-    end
+    
     Barrier_Right(w,1) = Full_Energy_Landscape(w,2) - Full_Energy_Landscape(w,1);
     if Barrier_Right(w,1)<0
         Negatives = Negatives + 1;

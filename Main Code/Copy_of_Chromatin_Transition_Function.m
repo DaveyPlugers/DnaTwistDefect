@@ -1,4 +1,4 @@
-function [Introduction_Time,Leave_Time,k,Time] = Chromatin_Transition_Function(Duration,DNA,Position_Remodeller,Start_Position,Chr_Dir,IntroductionRate,Variable_Introrate,Passable_Chromatin,Chromatin_Barrier,Barrier_Left,Barrier_Right)
+function [Introduction_Time,Leave_Time,k,Time] = Copy_of_Chromatin_Transition_Function(Duration,DNA,Position_Remodeller,Start_Position,Chr_Dir,IntroductionRate,Variable_Introrate,Passable_Chromatin,Chromatin_Barrier,Barrier_Left,Barrier_Right)
 %CHROMATIN_TRANSITION_FUNCTION Creates a subsimulation of the twist defects
 %motion. Takes begin position, duration and energy barriers, returns the
 %times at which it was at a certain location once done
@@ -70,7 +70,7 @@ end
 %Chromatin_Barrier = exp(-12); %Make this a better value later
 
 
-k = Start_Position + (-1)^(Chr_Dir); %what position does our simulation start at
+k = Start_Position + (-1)^(Chr_Dir+1); %what position does our simulation start at
 
 Failed_Defect=zeros(2,1);
 g=1; %Index for introduction_time
@@ -98,7 +98,7 @@ while Looping
             TransitionRate = TransitionRate + Right_Movement(y) + Left_Movement(y);
         elseif y==n
             if Chr_Dir == 0%2 directions work differently for our new index
-                l = mod(k - sum(Defect_Array(1:n-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond with theoretical peak
+                l = mod(k + sum(Defect_Array(1:n-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond with theoretical peak
             else
                 l = mod(k - sum(Defect_Array(1:n-1))-1,M)+1;
             end %l is used to take into account the different defects can be present and thus we shouldn't
@@ -108,7 +108,7 @@ while Looping
             TransitionRate = TransitionRate + Left_Movement(y) + Right_Movement(y);
         else
             if Chr_Dir == 0 %2 directions work differently for our new index
-                l = mod(k - sum(Defect_Array(1:y-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond
+                l = mod(k + sum(Defect_Array(1:y-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond
             else
                 l = mod(k - sum(Defect_Array(1:y-1))-1,M)+1;
             end
@@ -128,7 +128,7 @@ while Looping
 
     if Time > Duration
        Looping = false; %Stop the loop
-       k = mod(k - sum(Defect_Array)*(-1)^(Chr_Dir)-1,M)+1; %We undo the still present defects, we can make this more accurate later
+       k = mod(k - sum(Defect_Array)*(-1)^(Chr_Dir+1)-1,M)+1; %We undo the still present defects, we can make this more accurate later
        %By seeing if they would still complete it or not, we do - for
        %Chr_Dir= 0 and + for Chr_Dir = 1
        
@@ -148,9 +148,9 @@ while Looping
     elseif TransitieCoefficient < Introduction_Possible*IntroductionRate
         Defect_Array(1) = Defect_Array(1) + 1; %Here we introduce a twist, doing like this just to test if it works, replace with =1 later
         if Chr_Dir ==0
-            k = mod(k,M) +1; %k -> k+1
-        else
             k = mod(k-2,M) +1; %k -> k-1
+        else
+            k = mod(k,M) +1; %k -> k+1
         end
         Introduction_Time(:,g) = [Time,k];
         g = g+1;
@@ -170,9 +170,9 @@ while Looping
                     Failed_Defect(:,r) = [k,Introduction_Time(g-1)]';
                     g=g-1;
                     if Chr_Dir == 0
-                        k = mod(k-2,M) +1;
-                    else
                         k = mod(k,M) +1;
+                    else
+                        k = mod(k-2,M) +1;
                     end
                     r = r+1;
                 else
@@ -185,9 +185,9 @@ while Looping
                 if y==n
                     
                     if Chr_Dir == 0%2 directions work differently for our new index
-                        l = mod(k - sum(Defect_Array(1:n-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond with theoretical peak
+                        l = mod(k + sum(Defect_Array(1:n-1))-1,M)+1; %Double check, something maybe wrong with index since it doesn't correspond with theoretical peak
                     else
-                        l = mod(k + sum(Defect_Array(1:n-1))-1,M)+1;
+                        l = mod(k - sum(Defect_Array(1:n-1))-1,M)+1;
                     end
                     
                     

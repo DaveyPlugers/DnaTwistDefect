@@ -14,7 +14,7 @@ Gamma = 4.46;
 Theta_Twist = 35.575;
 Raise = 3.4; %Angstrom
 %We have some issues with Phase_Shift, get back to later?
-Phase_Shift = -2*pi/20;
+Phase_Shift = -6*pi/20;
 N=147;
 AminoBP = [6,16,26,36,46,56,66,76,86,96,106,116,126,136,146];
 
@@ -131,6 +131,36 @@ elseif Defect_Type ==6 %K20 20 to 21
     Defected_Geom(BeginIndexType6+21,:) = TempGeomType6;
     AminoBP(Defect_Location+1:15)=AminoBP(Defect_Location+1:15)+1;
     AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:15)];
+elseif Defect_Type ==9 %10 to 11, from the other side
+    Phase_Shift = -10*pi/20;
+    BeginIndexType9 = 10*(Defect_Location-1)+5;
+    Defected_Geom = DNA_Geometry;
+    TempGeomType9 = DNA_Geometry(BeginIndexType9,:);
+    for i=BeginIndexType9:BeginIndexType9+10
+        Defected_Geom(i,:) = [0,0,Raise*10/11,Theta_Twist*10/11,5/5.5*Gamma*cos(2*pi*(i-(BeginIndexType9))*10/(11*10) + 2*pi*(BeginIndexType9)/10 -Phase_Shift),5/5.5*Gamma*sin(2*pi*(i-(BeginIndexType9))*10/(11*10)+ 2*pi*(BeginIndexType9)/10-Phase_Shift)];
+    end
+    
+    for i=1:BeginIndexType9-2
+        Defected_Geom(i,:) = Defected_Geom(i+1,:);
+    end
+    Defected_Geom(BeginIndexType9-1,:) = TempGeomType9;
+    AminoBP(Defect_Location+1:15)=AminoBP(Defect_Location+1:15)+1; %We don't really use this now, this isn't correct atm.
+elseif Defect_Type ==10 %K20 20 to 21    
+    Phase_Shift = -10*pi/20 ;
+    BeginIndexType10 = 10*(Defect_Location-1)+5;
+    Defected_Geom = DNA_Geometry;
+    TempGeomType10 = DNA_Geometry(BeginIndexType10,:);
+    for i=BeginIndexType10:BeginIndexType10+20
+        Defected_Geom(i,:) = [0,0,Raise*20/21,Theta_Twist*20/21,20/21*Gamma*cos(2*pi*(i-BeginIndexType10)*20/(21*10) + 2*pi*BeginIndexType10/10 -Phase_Shift),20/21*Gamma*sin(2*pi*(i-BeginIndexType10)*20/(21*10)+ 2*pi*BeginIndexType10/10-Phase_Shift)];
+    end
+    
+    for i=1:BeginIndexType10-2
+        Defected_Geom(i,:) = Defected_Geom(i+1,:);
+    end
+    Defected_Geom(BeginIndexType10-1,:) = TempGeomType10;
+    %AminoBP(Defect_Location+1:15)=AminoBP(Defect_Location+1:15)+1;
+    %AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:15)];
+
 end
 
 end

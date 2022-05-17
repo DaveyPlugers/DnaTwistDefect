@@ -12,7 +12,7 @@ function [Defected_Geom,AminoBP] = ReversedDefectIntroducer(DNA_Geometry,Defect_
 %   So it takes the bp from the left, where the original takes the bp from
 %   the right
 %   AminoBP = Array saving all the positions of binding sites
-Defect_Type = Defect_Type-4; %We adjust since in other code we do +4, it is sloppy but we can fix it if we wish to continue using the code
+Defect_Type = Defect_Type; %We adjust since in other code we do +4, it is sloppy but we can fix it if we wish to continue using the code
 Gamma = 4.46;
 Theta_Twist = 35.575;
 Raise = 3.4; %Angstrom
@@ -21,7 +21,7 @@ N=147;
 AminoBP = [6,16,26,36,46,56,66,76,86,96,106,116,126,136,146];
 
 
-if Defect_Type == 1 %Undertwist 10 to 11
+if Defect_Type == 5 %Undertwist 10 to 11
     BeginIndexType5 = 10*(Defect_Location-1)+6;
     Defected_Geom = DNA_Geometry;
     TempGeomType5 = DNA_Geometry(BeginIndexType5-1,:);
@@ -36,7 +36,7 @@ if Defect_Type == 1 %Undertwist 10 to 11
     Defected_Geom(BeginIndexType5-2,:) = TempGeomType5;
     AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1;
 
-elseif Defect_Type == 2
+elseif Defect_Type == 6
     BeginIndexType6 = 10*(Defect_Location-1)+6;
     Defected_Geom = DNA_Geometry;
     TempGeomType6 = DNA_Geometry(BeginIndexType6-1,:);
@@ -51,7 +51,33 @@ elseif Defect_Type == 2
     Defected_Geom(BeginIndexType6-2,:) = TempGeomType6;
     AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1;
     AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:15)];
-
-
+elseif Defect_Type == 9
+    Phase_Shift = -6*pi/20;
+    BeginIndexType9 = 10*(Defect_Location-1)+6;
+    Defected_Geom = DNA_Geometry;
+    TempGeomType9 = DNA_Geometry(BeginIndexType9+10,:);
+    for i=BeginIndexType9:BeginIndexType9+10
+        Defected_Geom(i,:) = [0,0,Raise*10/11,Theta_Twist*10/11,5/5.5*Gamma*cos(2*pi*(i-BeginIndexType9)*10/(11*10) + 2*pi*(BeginIndexType9)/10 -Phase_Shift),5/5.5*Gamma*sin(2*pi*(i-BeginIndexType9)*10/(11*10)+ 2*pi*(BeginIndexType9)/10-Phase_Shift)];
+    end
+    
+    for i=0:N-BeginIndexType9-12
+        Defected_Geom(N-i,:) = Defected_Geom(N-i-1,:);
+    end
+    Defected_Geom(BeginIndexType9+11,:) = TempGeomType9;
+    AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1; %Didn't update the AminoBp yet, this is wrong maybe?
+elseif Defect_Type == 10
+    Phase_Shift = -6*pi/20;
+    BeginIndexType10 = 10*(Defect_Location-1)+6;
+    Defected_Geom = DNA_Geometry;
+    TempGeomType10 = DNA_Geometry(BeginIndexType10+20,:);
+    for i=BeginIndexType10:BeginIndexType10+20
+        Defected_Geom(i,:) = [0,0,Raise*20/21,Theta_Twist*20/21,20/21*Gamma*cos(2*pi*(i-BeginIndexType10)*20/(21*10) + 2*pi*(BeginIndexType10)/10 -Phase_Shift),20/21*Gamma*sin(2*pi*(i-BeginIndexType10)*20/(21*10)+ 2*pi*(BeginIndexType10)/10-Phase_Shift)];
+    end
+    
+    for i=0:N-BeginIndexType10-22
+        Defected_Geom(N-i,:) = Defected_Geom(N-i-1,:);
+    end
+    Defected_Geom(BeginIndexType10+21,:) = TempGeomType10;
+    AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1; %Didn't update the AminoBp yet, this is wrong maybe?
 end
 
