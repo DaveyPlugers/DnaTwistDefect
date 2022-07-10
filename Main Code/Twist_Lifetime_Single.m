@@ -21,12 +21,14 @@ Energy_Landscape = fliplr(Chromatin_Energy_Landscape(:,1:2*n-1));
 %Energy_Landscape = [repmat([2,5],1,n)];
 %Defect_Array = [0,0,0,0,0,0,0,0,0,0];
 
-
+Array = [10^-2,10^-4,10^-6,10^-8]
+for x=1:4
+IntroductionRate = Array(x)
 Defect_Array = zeros(1,n);
 
 
 Time = 0;
-IntroductionRate = 10^(-7); %Small value so it doesn't happen often
+ %Small value so it doesn't happen often
 
 Iterations = 5000000;
 Introduction_Time = zeros(1,floor(Iterations/n^2));
@@ -39,15 +41,15 @@ for q=1:Iterations
     
     TransitionRate = Introduction_Possible*IntroductionRate;
     for y=1:n
-        if y==1
+        if y==1&&(Right_Movement(1)==1)
             Right_Movement(y) = Right_Movement(y)*exp(-(Energy_Landscape(k,2*y) - Energy_Landscape(k,2*y-1)));
             TransitionRate = TransitionRate + Right_Movement(y);
-        elseif y==n
+        elseif y==n&&(Left_Movement(y)==1||Right_Movement(y)==1)
             l = mod(k - sum(Defect_Array(1:n-1))-1,10)+1; %Double check
             Left_Movement(y) = Left_Movement(y)*exp(-(Energy_Landscape(l,2*(y-1)) - Energy_Landscape(l,2*(y-1)+1)));
-            Right_Movement(y) = Defect_Array(y)*exp(-(3)); %Note this is the leaving one, change later
+            Right_Movement(y) = Defect_Array(y)*exp(-(3)); %Note this is the leaving one, did not have the actual value when writing this, can be updated soon??
             TransitionRate = TransitionRate + Left_Movement(y) + Right_Movement(y);
-        else
+        elseif (Left_Movement(y)==1||Right_Movement(y)==1)&&not(y==1||y==n)
             
             l = mod(k - sum(Defect_Array(1:y-1))-1,10)+1; %Double check
             Left_Movement(y) = Left_Movement(y)*exp(-(Energy_Landscape(l,2*(y-1)) - Energy_Landscape(l,2*(y-1)+1)));
@@ -131,6 +133,8 @@ end
 x = 1:10;
 errorbar(x,Average_Lifetime,std(Lifetime)/sqrt(TenSteps))
 set(gca,'YScale','log')
+hold on
+end
 
 %Calculating theoretical value
 TTR = zeros(11,2,n); %TTR = theoretical transition rate
@@ -144,7 +148,7 @@ for y=1:10
     TTR(y,2,9) = exp(-(Energy_Landscape(y,2*(z-1))-Energy_Landscape(y,2*z-1)));
     TTR(y,1,9) = exp(-3); %We just use an energy barrier of 3 for all of these, change later
 end
-TTR(11,:,:) = exp(-3);
+TTR(11,:,:) = NaN;
 Theoretical_Lifetimes = zeros(11,n);
 
 for y=1:11
@@ -162,24 +166,25 @@ legend('Single Sided Simulation Lifetime','Theoretical single particle Lifetime'
 
 
 if floor(length(Leave_Time(1:end-2))/10) == TenSteps
-    Time_Delays_Double = zeros(1,10);
-    Time_Delays_Triple = zeros(1,10);
+    Time_Delays_Double = zeros(TenSteps,10);
+    Time_Delays_Triple = zeros(TenSteps,10);
 
     for i=1:TenSteps
         for j=1:10
-            Time_Delays_Double(j) = (Leave_Time((i-1)*10+j+1) - Leave_Time((i-1)*10+j))/TenSteps;
-            Time_Delays_Triple(j) = (Leave_Time((i-1)*10+j+2) - Leave_Time((i-1)*10+j))/TenSteps;
+            Time_Delays_Double(i,j) = (Leave_Time((i-1)*10+j+1) - Leave_Time((i-1)*10+j));
+            Time_Delays_Triple(i,j) = (Leave_Time((i-1)*10+j+2) - Leave_Time((i-1)*10+j));
         end
     end
     
 else
-    Time_Delays_Double = zeros(1,10);
-    Time_Delays_Triple = zeros(1,10);
+    Time_Delays_Double = zeros(TenSteps-1,10);
+    Time_Delays_Triple = zeros(TenSteps-1,10);
 
     for i=1:TenSteps-1
         for j=1:10
-            Time_Delays_Double(j) = (Leave_Time((i-1)*10+j+1) - Leave_Time((i-1)*10+j))/(TenSteps-1);
-            Time_Delays_Triple(j) = (Leave_Time((i-1)*10+j+2) - Leave_Time((i-1)*10+j))/(TenSteps-1);
+            Time_Delays_Double(i,j) = (Leave_Time((i-1)*10+j+1) - Leave_Time((i-1)*10+j));
+            Time_Delays_Triple(i,j) = (Leave_Time((i-1)*10+j+2) - Leave_Time((i-1)*10+j));
+            
         end
     end
 end
@@ -187,8 +192,8 @@ end
 
 
 figure
-plot(x,Time_Delays_Double)
+plot(x,sum(Time_Delays_Double,1))
 
 hold on
-plot(x,Time_Delays_Triple)
+plot(x,sum(Time_Delays_Triple,1))
 set(gca,'YScale','log')

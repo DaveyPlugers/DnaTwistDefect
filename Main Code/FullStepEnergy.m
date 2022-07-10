@@ -31,15 +31,15 @@ Geometric_Properties(:,:,6) = K_Twist_Array;
 Geometric_Properties(:,:,7) = Raise_Array;
 Geometric_Properties(:,:,8) = K_Raise_Array;
 
-InternalSteps = 10;
-Internalmove = 9;
+InternalSteps = 100;
+Internalmove = 10;
 
 N = 147;
 
 Energy = zeros(1,InternalSteps);
 for k=1:Amounts_DNA
     for w=1:InternalSteps
-        DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
+       DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
        [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);
        Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
        Energy(w) = Energy(w) + sum(sum(Undefected_Energy))/Amounts_DNA;
@@ -48,7 +48,7 @@ for k=1:Amounts_DNA
     end
 end
 plot(Energy)
-
+Temporary = Energy; 
 Amplitude = max(Energy) - min(Energy);
 
 Goal_Amplitude = 15;
@@ -78,10 +78,10 @@ figure
 plot(Energy)
 
 w=1;
-Energy_Defects = zeros(10,27);
+Energy_Defects = zeros(10,25);
 for w=1:10
     for k=1:Amounts_DNA
-        for r=1:14
+        for r=1:13
 
            DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
            [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);
@@ -97,7 +97,7 @@ end
 
 for w=1:10
     for k=1:Amounts_DNA
-        for r=1:13
+        for r=1:12
 
            DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
            [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);
@@ -110,3 +110,61 @@ for w=1:10
         end
     end
 end
+
+
+
+
+
+
+
+%This one is without Damp
+
+Undamped_Energy_Defects = zeros(30,25);
+for w=1:30
+    for k=1:Amounts_DNA
+        for r=1:13
+
+           DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
+           [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);
+           Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
+           [Defected_DNA_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,r,1);
+           Defected_Energy = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
+           Undamped_Energy_Defects(w,2*r-1) = Undamped_Energy_Defects(w,2*r-1) + sum(sum(Defected_Energy))/Amounts_DNA;
+
+
+        end
+    end
+end
+
+for w=1:20
+    for k=1:Amounts_DNA
+        for r=1:12
+
+           DNAString = DNAStringBase(k,w+Internalmove:N+w+Internalmove);
+           [DNA_Geometry,DNAIndexation] = GeomArrayMaker(DNAString,1,Geometric_Properties);
+           Undefected_Energy = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
+           [Defected_DNA_Geom,AminoBP] = DefectIntroducer(DNA_Geometry,r,2);
+           Defected_Energy = EnergyValuesCalculator(Defected_DNA_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
+           Undamped_Energy_Defects(w,2*r) = Undamped_Energy_Defects(w,2*r) + sum(sum(Defected_Energy))/Amounts_DNA;
+
+
+        end
+    end
+end
+figure
+
+test = [];
+for i=1:10
+    test = [test fliplr(Undamped_Energy_Defects(i,:))];
+end
+
+x=linspace(1,10,250);
+Colours = jet(10);
+figure
+for i=1:10
+    hold on
+   plot(x(1+25*(i-1):25*(i)), fliplr(Undamped_Energy_Defects(i,:)),"Color", Colours(mod(i-1,10)+1,:),'DisplayName', "Steps taken = " + i)
+end
+legend show
+
+plot([0.5 1.5 2.5 3.5 4.5 5.5 6.5 7.5 8.5 9.5 10.5], Temporary(1:11),"Color",'black',"Linewidth",1,"DisplayName","Nucleosome Wrapping Energy")

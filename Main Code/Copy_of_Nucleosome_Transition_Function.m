@@ -28,8 +28,8 @@ function [Introduction_Time,Leave_Time,k,Time] = Copy_of_Nucleosome_Transition_F
 M = length(DNA);
 DNA = [DNA DNA];
 
-p = Position_Remodeller + 7;
-n = 14 - p; %How many positions are there for the defect to move in
+p = Position_Remodeller + 6;
+n = 13 - p; %How many positions are there for the defect to move in
 Defect_Array = zeros(1,n);
 Time = 0;
 
@@ -78,8 +78,11 @@ g=1; %Index for introduction_time
 h=1; %Index for the leave_time
 r=1; %Index for failed defects
 Looping = true;
+Left_Movement = zeros(1,n);
+Right_Movement = zeros(1,n);
+
 while Looping
-    [Left_Movement,Right_Movement,Introduction_Possible] = LeftRightMovement(Defect_Array);
+    [Left_Movement,Right_Movement,Introduction_Possible] = LeftRightMovement(Defect_Array,Left_Movement,Right_Movement);
     
     %Here we can change some stuff to have our introduction rate be
     %sequence dependent, for now we have it constant, implement next time
@@ -104,7 +107,7 @@ while Looping
                 l = mod(k - sum(Defect_Array(1:n-1))-1,M)+1;
             end %l is used to take into account the different defects can be present and thus we shouldn't
             %use k but the actual position the defect is living in
-            Left_Movement(y) = Left_Movement(y)*exp(-(Barrier_Left(Chr_Dir*M+l,14)));
+            Left_Movement(y) = Left_Movement(y)*exp(-(Barrier_Left(Chr_Dir*M+l,13)));
             Right_Movement(y) = Defect_Array(y)*exp(-(3)); %Note this is the leaving one, change later
             TransitionRate = TransitionRate + Left_Movement(y) + Right_Movement(y);
         elseif (Left_Movement(y)==1||Right_Movement(y)==1)

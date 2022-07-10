@@ -68,15 +68,17 @@ Duration_Loops = 10^5;
 Chromatin_Barrier = 10^(-12);
 Intro_Rate = 10^(-6);
 
-Damp_Factor = 1;
+Damp_Factor = 0.8;
 Position_Remodeller = -2;
 Loop_Velocity = 1;
 Total_Duration = 10^(11);
 Amount_Of_Simulations = 1;
 Sequence_Difference = [10^(-6);10^(-8);10^(-10);10^(-12)];%Here we can change some parameters for the different simulations
-Sequence_Difference2 = [10^7; 10^12;10^14;10^16];
-Sequence_Difference3 = [10^7;0.5*10^10;0.5*10^12;0.5*10^14];
+Sequence_Difference2 = [10^11; 10^12;10^14;10^16];
+Sequence_Difference3 = [10^8;0.5*10^10;0.5*10^12;0.5*10^14];
 DNA = 'GGTGGGCTCCGAAAAATTCGCAGGGCGACCGGCGAAATGCTCAAAAAATCAAAAAATATTCCCTGAAACAAAAGCAACTCTTGCGAAACGGGCGCATTTTTAAAAAATTCGGAGAAAATTTTTGAAATCGTGACGCATCTCTTGCCGTTCGCCAAACAATCCAGAAATTTTATTGTTCAGGCAAAATTCACTAGGTTTTATGGTGAAACGCAAAAAATTCTGACGTTTTCATGAACGTCTTTTAGGATTTTCAGGTTAATGCGGTTGGGCTCCAAAATCTCAAGCAGTCTCGTAGAAATTTCAAAAATTTCGGCATTCTTGGAGAATCACGGGAAGATACTCGCCGGTTT'; 
+%DNA = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; 
+DNA = 'ACATACATTCTTTTAAATTTCGAAGACCTCGTGATTCTTCCCGCGTTTACTGGCAAAATCTTAGAAATCGCGGCAAAGTCAAAAAAATTTTACAAATTGTCGTCGGGTCCTTAGAATTCGGCAGTCGTTTCTGGGTTCACGCACGACTTCTTTGAAAGGTCAAAAGCCGCCGAGTTTTTTCGGCGTAACTCCCGATCAGACCGAAACATCTGAAAACTTTCCTGTGACTACGCAGACGTCCGGGAAGTTCAAATCGTTTCGGGAGTTATCTTGAGATTTCTTCAAAACACACCAGCGTTTTCGAAAAATCTCCGTAATCACGCAAAACACGCTACGAATCAGAAAACGAA';
 %% Calculating EnergyLandscape
 %Later write some more code here to verify validity
 
@@ -179,16 +181,16 @@ Fractional_Duration = Fractional_Duration/Time_Passed;
 %Colours = summer(Amount_Of_Simulations);  %This is more a sequential way of doing it with 5 colours, should also be good for colour blind? Either uncomment this and the line below or the one above
 %Colours(5,:) = [0.75, 0.75, 0]; %Change the last yellow to a darker one
 Colours = inferno(Amount_Of_Simulations+1); %+1 since the colormap becomes too white in the end
-Lbl_text = ["10^{-4}";"10{-6}"; "10^{-8}";"10^{-10}";"10^{-12}"];
+Lbl_text = ["0.18";"10{-6}"; "10^{-8}";"10^{-10}";"10^{-12}"];
 
-txt = "Introduction rate = " + Lbl_text(z);
+txt = "Damp factor = " + Lbl_text(z);
 
 plot(Fractional_Duration,'color',Colours(z,:), 'linewidth', 1.2, 'DisplayName', txt)
 hold on
 Fractional_Duration_History(z,:) = Fractional_Duration;
 end
- 
-title("Occupation distribution remodeller for different passable remodeller rates")
+
+title("Occupation distribution remodeler for different damp factor")
 xlabel('Begin Index of 147 length DNA string')
 ylabel('Fractional probability')
 Uniform = 1/length(DNA);

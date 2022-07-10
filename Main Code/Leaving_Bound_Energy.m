@@ -21,8 +21,8 @@ N=147;
 
 
 if Direction==0
-    Defect_Location = 14;
-    AminoBP = [6,16,26,36,46,56,66,76,86,96,106,116,126,136,146];
+    Defect_Location = 13;
+    AminoBP = [6,16,26,36,46,56,66,76,86,96,106,116,126,136];
     BeginIndexType6 = 10*(Defect_Location-1)+6;
     Defected_Geom = DNA_Geometry;
     TempGeomType6 = DNA_Geometry(BeginIndexType6+10,:);
@@ -35,13 +35,14 @@ if Direction==0
     end
     
     Defected_Geom(BeginIndexType6+11,:) = TempGeomType6;
-    AminoBP(Defect_Location+1:15)=AminoBP(Defect_Location+1:15)+1;
-    AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:15)];
+    %AminoBP(Defect_Location+1:14)=AminoBP(Defect_Location+1:14)+1;
+    %AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:14)];
     Defect_Temp = EnergyValuesCalculator(Defected_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
     Normal_Temp = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
-    Energy = sum(sum(Defect_Temp(136:147,:) - Normal_Temp(136:147,:)));
+    %Energy = sum(sum(Defect_Temp(126:137,:) - Normal_Temp(126:137,:)));
+    Energy = sum(sum(Defect_Temp(:,:)));
 else
-    AminoBP = [7,17,27,37,47,57,67,77,87,97,107,117,127,137,147];
+    AminoBP = [7,17,27,37,47,57,67,77,87,97,107,117,127,137];
     Defect_Location = 0;
     BeginIndexType6 = 7;
     Defected_Geom = DNA_Geometry;
@@ -54,11 +55,13 @@ else
         Defected_Geom(i,:) = Defected_Geom(i+1,:);
     end
     Defected_Geom(BeginIndexType6-2,:) = TempGeomType6;
-    AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1;
-    AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:15)];
+    
+    %AminoBP(1:Defect_Location)=AminoBP(1:Defect_Location)-1;
+    %AminoBP = [AminoBP(1:Defect_Location), 10*Defect_Location+6 , AminoBP(Defect_Location+1:14)];
     Defect_Temp = EnergyValuesCalculator(Defected_Geom,DNAIndexation,Geometric_Properties,true,true,true,true);
     Normal_Temp = EnergyValuesCalculator(DNA_Geometry,DNAIndexation,Geometric_Properties,true,true,true,true);
-    Energy = sum(sum(Defect_Temp(6:17,:) - Normal_Temp(6:17,:)));
+    %Energy = sum(sum(Defect_Temp(6:17,:) - Normal_Temp(6:17,:)));
+    Energy = sum(sum(Defect_Temp(:,:)));
 end
 
 
